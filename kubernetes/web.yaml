@@ -1,0 +1,41 @@
+# kubetpl:syntax:$
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: web
+  namespace: cabot
+  labels:
+    service: web
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        service: web
+    spec:
+      containers:
+      - name: web
+        image: cabotapp/cabot:${CABOT_VERSION}
+        args:
+        - sh
+        - -c
+        - cabot migrate && gunicorn cabot.wsgi:application -b 0.0.0.0:5000 --workers=5
+        envFrom:
+        - configMapRef:
+            name: cabot-default-config
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: cabot
+spec:
+  ports:
+  - name: http
+    port: 5000
+  selector:
+    service: web

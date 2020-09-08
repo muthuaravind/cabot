@@ -1,0 +1,29 @@
+# kubetpl:syntax:$
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: cabot
+  labels:
+    service: worker
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        service: worker
+    spec:
+      containers:
+      - name: worker
+        image: cabotapp/cabot:${CABOT_VERSION}
+        args:
+        - celery
+        - worker
+        - -A
+        - cabot
+        envFrom:
+        - configMapRef:
+            name: cabot-default-config
+        - configMapRef:
+            name: cabot-${CABOT_ENVIRONMENT}-config
+      restartPolicy: Always
